@@ -1,9 +1,9 @@
 state ("LittleWitchNobeta") 
 {
 	//Use ASL Var Viewer to show in LiveSplit
-	float PosH : "UnityPlayer.dll", 0x1AA3FE0, 0x48, 0x0, 0x60, 0x0, 0x1E8, 0x130, 0x14;
-	float PosX : "UnityPlayer.dll", 0x1AA3FE0, 0x48, 0x0, 0x60, 0x0, 0x1E8, 0x130, 0x18;
-	float PosY : "UnityPlayer.dll", 0x1AA3FE0, 0x48, 0x0, 0x60, 0x0, 0x1E8, 0x130, 0x10;
+	float PosX : "UnityPlayer.dll", 0x1AA3FE0, 0x48, 0x0, 0x60, 0x0, 0x1E8, 0x130, 0x10;
+	float PosY : "UnityPlayer.dll", 0x1AA3FE0, 0x48, 0x0, 0x60, 0x0, 0x1E8, 0x130, 0x14;
+	float PosZ : "UnityPlayer.dll", 0x1AA3FE0, 0x48, 0x0, 0x60, 0x0, 0x1E8, 0x130, 0x18;
 }
 
 startup
@@ -43,30 +43,22 @@ init
 	IntPtr ptr = IntPtr.Zero;
 	var module = game.ModulesWow64Safe().First(m => m.ModuleName == "GameAssembly.dll");
 	var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
-	var target = new SigScanTarget(3, "48 8D 0D ???????? E8 ?? ?? ?? ?? C6 05 ?? ?? ?? ?? 01 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 D2 48 8B C8 48 8B D8 E8 ?? ?? ?? ?? 48 85 FF 0F 84 ?? ?? ?? ?? 48 85 DB 74 ?? 8B 4F ??")
+	var target = new SigScanTarget(3, "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? C6 05 ?? ?? ?? ?? 01 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 D2 48 8B C8 48 8B D8 E8 ?? ?? ?? ?? 48 85 FF 0F 84 ?? ?? ?? ?? 48 85 DB 74 ?? 8B 4F ??")
 	{OnFound = (p, s, pt) => p.ReadPointer(pt + 0x4 + p.ReadValue<int>(pt)) + 0xB8};
 	
 	//Scan Baseaddress
-	do
-	{
-		if((ptr = scanner.Scan(target)) != IntPtr.Zero)
-		{
-			vars.Dbg("'ptr' at " + ptr.ToString("X"));
-			break;
-		}
-		vars.Dbg("'ptr' not found.");
-		Thread.Sleep(2000);
-	} while (ptr == IntPtr.Zero);
+	ptr = scanner.Scan(target);
+	vars.Dbg("'ptr' at " + ptr.ToString("X"));
 	
 	//ReadMem
 	vars.watchers = new MemoryWatcherList
 	{
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x20, 0x28, 0x10, 0x280)) { Name = "loadScreen" },
+		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x20, 0x28, 0x10, 0x280)) { Name = "assetCached" },
 		new MemoryWatcher<bool>(new DeepPointer(ptr, 0x0, 0x40, 0x30, 0x28, 0xA0)) { Name = "progressLabel" },
 		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xE8)) { Name = "StageID" },
 		new MemoryWatcher<bool>(new DeepPointer(ptr, 0x78, 0xD0)) { Name = "onSystemMenu" },
 		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0x58)) { Name = "stageState" },
-		new StringWatcher(new DeepPointer(ptr, 0x90, 0x10, 0x14), 128) { Name = "SceneName" }
+		new StringWatcher(new DeepPointer(ptr, 0x90, 0x10, 0x14), 128) { Name = "sceneName" }
 	};
 	vars.boss = new MemoryWatcherList
 	{
@@ -94,7 +86,7 @@ init
 
 	//Test
 	vars.watchers.UpdateAll(game);
-	vars.Dbg(vars.watchers["SceneName"].Current);
+	vars.Dbg(vars.watchers["sceneName"].Current);
 
 	//Address (Show on Game Version)
 	version = ptr.ToString("X");
@@ -102,7 +94,7 @@ init
 
 update
 {
-	//Separate for reduce CPU (I hope)
+	//Separate for reduce CPU (I hope so)
 	vars.watchers.UpdateAll(game);
 	if(settings["Boss"]) vars.boss.UpdateAll(game);
 	if(settings["Mini Boss"]) vars.miniboss.UpdateAll(game);
@@ -111,7 +103,7 @@ update
 
 start
 {
-	return (vars.watchers["SceneName"].Current == "Act01_02");
+	if(vars.watchers["sceneName"].Current == "Act01_02") return true;
 }
 
 split
@@ -156,11 +148,11 @@ exit
 
 reset
 {
-	return vars.watchers["SceneName"].Current == "Title";
+	return vars.watchers["sceneName"].Current == "Title";
 }
 
 isLoading
 {
-	if(settings["onSystemMenu"]) return (vars.watchers["onSystemMenu"].Current && (vars.watchers["stageState"].Current < 1)) || (vars.watchers["loadScreen"].Current == 255) || !vars.watchers["progressLabel"].Current;
-	else return (vars.watchers["loadScreen"].Current == 255) || !vars.watchers["progressLabel"].Current;
+	if(settings["onSystemMenu"]) return (vars.watchers["onSystemMenu"].Current && (vars.watchers["stageState"].Current < 1)) || (vars.watchers["assetCached"].Current == 255) || !vars.watchers["progressLabel"].Current;
+	else return (vars.watchers["assetCached"].Current == 255) || !vars.watchers["progressLabel"].Current;
 }
