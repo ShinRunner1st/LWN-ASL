@@ -9,9 +9,10 @@ state ("LittleWitchNobeta")
 startup
 {
 	//Add Settings
-	settings.Add("Boss");
-	settings.Add("Mini Boss", false);
-	settings.Add("Abyss Challenges", false);
+	settings.Add("Split");
+	settings.Add("Boss", true, "Boss", "Split");
+	settings.Add("Mini Boss", false, "Mini Boss", "Split");
+	settings.Add("Abyss Challenges", false, "Abyss Challenges", "Split");
 	settings.Add("Other", false);
 
 	settings.Add("Armor", true, "Mysterious Armor", "Boss");
@@ -31,7 +32,14 @@ startup
 	settings.Add("chalR", false, "Abyss Challenges Right", "Abyss Challenges");
 	settings.Add("chalC", false, "Abyss Challenges Center", "Abyss Challenges");
 
-	settings.Add("onSystemMenu", false, "PauseTimer on Pause Menu", "Other");
+	settings.Add("onSystemMenu", false, "Timer Pause in Pause Menu", "Other");
+	settings.Add("resetDeath", false, "Death Reset", "Other");
+
+	settings.SetToolTip("Boss","Split when the boss death.");
+	settings.SetToolTip("Mini Boss","Split when the mini boss death.");
+	settings.SetToolTip("Abyss Challenges","Split when destory the crytal.");
+	settings.SetToolTip("onSystemMenu","Timer pause while pasue menu is open.");
+	settings.SetToolTip("resetDeath","Reset timer when nobeta death.");
 
 	//DebugOutput
 	vars.Dbg = (Action<dynamic>) ((text) => print("[LWN Auto Splitter] : " + text));
@@ -51,38 +59,41 @@ init
 	vars.Dbg("'ptr' at " + ptr.ToString("X"));
 	
 	//ReadMem
-	vars.watchers = new MemoryWatcherList
+	if(ptr != IntPtr.Zero)
 	{
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x20, 0x28, 0x10, 0x280)) { Name = "assetCached" },
-		new MemoryWatcher<bool>(new DeepPointer(ptr, 0x0, 0x40, 0x30, 0x28, 0xA0)) { Name = "progressLabel" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xE8)) { Name = "StageID" },
-		new MemoryWatcher<bool>(new DeepPointer(ptr, 0x78, 0xD0)) { Name = "onSystemMenu" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0x58)) { Name = "stageState" },
-		new StringWatcher(new DeepPointer(ptr, 0x90, 0x10, 0x14), 128) { Name = "sceneName" }
-	};
-	vars.boss = new MemoryWatcherList
-	{
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x138, 0x10, 0x70, 0x166)) { Name = "Armor" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x218, 0x10, 0x70, 0x166)) { Name = "Secret" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x1C0, 0x10, 0x70, 0x166)) { Name = "Tania" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x140, 0x10, 0x70, 0x166)) { Name = "Monica1" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0xF8, 0x10, 0x70, 0x166)) { Name = "Monica2" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x78, 0x10, 0x70, 0x166)) { Name = "Vanessa1" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x220, 0x10, 0x70, 0x166)) { Name = "Vanessa2" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0xA8, 0x10, 0x70, 0x166)) { Name = "Nonota" }
-	};
-	vars.miniboss = new MemoryWatcherList
-	{
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x288, 0x10, 0x70, 0x166)) { Name = "Knight" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x218, 0x10, 0x70, 0x166)) { Name = "Seal1" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x270, 0x10, 0x70, 0x166)) { Name = "Seal2" }
-	};
-	vars.chal = new MemoryWatcherList
-	{
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x6E)) { Name = "chalL" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x6F)) { Name = "chalR" },
-		new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x70)) { Name = "chalC" }
-	};
+		vars.watchers = new MemoryWatcherList
+		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x20, 0x28, 0x10, 0x280)) { Name = "assetCached" },
+			new MemoryWatcher<bool>(new DeepPointer(ptr, 0x0, 0x40, 0x30, 0x28, 0xA0)) { Name = "progressLabel" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xE8)) { Name = "StageID" },
+			new MemoryWatcher<bool>(new DeepPointer(ptr, 0x78, 0xD0)) { Name = "onSystemMenu" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0x58)) { Name = "stageState" },
+			new StringWatcher(new DeepPointer(ptr, 0x90, 0x10, 0x14), 128) { Name = "sceneName" }
+		};
+		vars.boss = new MemoryWatcherList
+		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x138, 0x10, 0x70, 0x166)) { Name = "Armor" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x218, 0x10, 0x70, 0x166)) { Name = "Secret" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x1C0, 0x10, 0x70, 0x166)) { Name = "Tania" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x140, 0x10, 0x70, 0x166)) { Name = "Monica1" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0xF8, 0x10, 0x70, 0x166)) { Name = "Monica2" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x78, 0x10, 0x70, 0x166)) { Name = "Vanessa1" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x220, 0x10, 0x70, 0x166)) { Name = "Vanessa2" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0xA8, 0x10, 0x70, 0x166)) { Name = "Nonota" }
+		};
+		vars.miniboss = new MemoryWatcherList
+		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x288, 0x10, 0x70, 0x166)) { Name = "Knight" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x218, 0x10, 0x70, 0x166)) { Name = "Seal1" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xA8, 0x10, 0x10, 0x270, 0x10, 0x70, 0x166)) { Name = "Seal2" }
+		};
+		vars.chal = new MemoryWatcherList
+		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x6E)) { Name = "chalL" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x6F)) { Name = "chalR" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x70)) { Name = "chalC" }
+		};
+	}
 
 	//Test
 	vars.watchers.UpdateAll(game);
@@ -90,20 +101,29 @@ init
 
 	//Address (Show on Game Version)
 	version = ptr.ToString("X");
+	
+	vars.Dbg("ASL is Starting");
 }
 
 update
 {
-	//Separate for reduce CPU (I hope so)
-	vars.watchers.UpdateAll(game);
-	if(settings["Boss"]) vars.boss.UpdateAll(game);
-	if(settings["Mini Boss"]) vars.miniboss.UpdateAll(game);
-	if(settings["Abyss Challenges"]) vars.chal.UpdateAll(game);
+	//Separate for reduce CPU usage (I hope so)
+	if (game.ProcessName == "LittleWitchNobeta")
+	{
+		vars.watchers.UpdateAll(game);
+		if(settings["Boss"]) vars.boss.UpdateAll(game);
+		if(settings["Mini Boss"]) vars.miniboss.UpdateAll(game);
+		if(settings["Abyss Challenges"]) vars.chal.UpdateAll(game);
+	}
 }
 
 start
 {
-	if(vars.watchers["sceneName"].Current == "Act01_02") return true;
+	if(vars.watchers["sceneName"].Changed && vars.watchers["sceneName"].Current == "Act01_02")
+	{
+		vars.Dbg("Start");
+		return true;
+	}
 }
 
 split
@@ -141,18 +161,36 @@ split
 	}
 }
 
-exit
+isLoading
 {
-	timer.IsGameTimePaused = true;
+	//menu(true) && state == 0 (normal = 0, death = 1, cutscene = 2, pray = 3)
+	if(settings["onSystemMenu"]) return ((vars.watchers["onSystemMenu"].Current && (vars.watchers["stageState"].Current == 0)) || (vars.watchers["assetCached"].Current == 255) || !vars.watchers["progressLabel"].Current);
+	else return ((vars.watchers["assetCached"].Current == 255) || !vars.watchers["progressLabel"].Current);
 }
 
 reset
 {
-	return vars.watchers["sceneName"].Current == "Title";
+	if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title"))
+	{
+		vars.Dbg("Reset");
+		return true;
+	}
+	
+	//Death :skull:
+	if(vars.watchers["stageState"].Changed && (vars.watchers["stageState"].Current == 1) && settings["resetDeath"])
+	{
+		vars.Dbg("Death Reset");
+		return true;
+	}
 }
 
-isLoading
+//fix IGT ahead 0.01-0.04 after start
+onStart
 {
-	if(settings["onSystemMenu"]) return (vars.watchers["onSystemMenu"].Current && (vars.watchers["stageState"].Current < 1)) || (vars.watchers["assetCached"].Current == 255) || !vars.watchers["progressLabel"].Current;
-	else return (vars.watchers["assetCached"].Current == 255) || !vars.watchers["progressLabel"].Current;
+	timer.IsGameTimePaused = true;
+}
+
+exit
+{
+	timer.IsGameTimePaused = true;
 }
