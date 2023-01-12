@@ -263,17 +263,17 @@ split
 			vars.sBoss[2] = 1;
 			return true;
 		}
-		if(vars.watchers["bossDialogue"].Current == 4 && vars.watchers["bossDialogue"].Changed && settings["sSecret"] && vars.sBoss[4] == 0)
+		if(vars.watchers["bossDialogue"].Current == 4 && vars.watchers["bossDialogue"].Changed && settings["sVanessa1"] && vars.sBoss[4] == 0)
 		{
 			vars.sBoss[4] = 1;
 			return true;
 		}
-		if(vars.watchers["bossDialogue"].Current == 5 && vars.watchers["bossDialogue"].Changed && settings["sSecret"] && vars.sBoss[5] == 0)
+		if(vars.watchers["bossDialogue"].Current == 5 && vars.watchers["bossDialogue"].Changed && settings["sVanessa2"] && vars.sBoss[5] == 0)
 		{
 			vars.sBoss[5] = 1;
 			return true;
 		}
-		if(vars.watchers["bossDialogue"].Current == 6 && vars.watchers["bossDialogue"].Changed && settings["sSecret"] && vars.sBoss[6] == 0)
+		if(vars.watchers["bossDialogue"].Current == 6 && vars.watchers["bossDialogue"].Changed && settings["sNonota"] && vars.sBoss[6] == 0)
 		{
 			vars.sBoss[6] = 1;
 			return true;
