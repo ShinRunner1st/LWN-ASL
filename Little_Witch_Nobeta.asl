@@ -50,7 +50,7 @@ startup
 
 	settings.SetToolTip("Boss","Split when the boss death.");
 	settings.SetToolTip("Mini Boss","Split when the mini boss death.");
-	settings.SetToolTip("sBoss","Split when start boss fight.\nPlayer Dead + Boss Alive = Undo Split\nPlayer Not Dead + Boss Alive + Loading = Undo Split\nPlayer Not Dead + Boss Dead = Null");
+	settings.SetToolTip("sBoss","Split when start boss fight.");
 	settings.SetToolTip("Abyss Challenges","Split when destory the crytal.");
 	settings.SetToolTip("onSystemMenu","Timer pause while pasue menu is open.");
 	settings.SetToolTip("resetDeath","Reset timer when nobeta death.");
@@ -64,6 +64,9 @@ startup
 init
 {
 	//Declared
+	vars.Boss = new int[9];
+	vars.sBoss = new int[9];
+	vars.mBoss = new int[3];
 	IntPtr ptr = IntPtr.Zero;
 	var module = game.ModulesWow64Safe().First(m => m.ModuleName == "GameAssembly.dll");
 	var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
@@ -121,7 +124,7 @@ init
 
 	//Test
 	vars.watchers.UpdateAll(game);
-	vars.Dbg(vars.watchers["sceneName"].Current);
+	//vars.Dbg(vars.watchers["sceneName"].Current);
 
 	//Address (Show on Game Version)
 	version = ptr.ToString("X");
@@ -143,25 +146,28 @@ update
 
 	if(settings.ResetEnabled)
 	{
-		if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title"))
+		if(timer.CurrentPhase != TimerPhase.NotRunning)
 		{
-			if(vars.boss["Nonota"].Current == 1 && vars.watchers["StageID"].Current >= 7)
+			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title"))
 			{
-				vars.Dbg("Reset");
-				vars.TimerModel.Reset();
+				if(vars.boss["Nonota"].Current == 1 && vars.watchers["StageID"].Current >= 7)
+				{
+					vars.Dbg("Reset");
+					vars.TimerModel.Reset();
+				}
+				else
+				{
+					vars.Dbg("Reset");
+					vars.TimerModel.Reset(false);
+				}
 			}
-			else
+			
+			//Death :skull:
+			if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current && settings["resetDeath"])
 			{
-				vars.Dbg("Reset");
+				vars.Dbg("Death Reset");
 				vars.TimerModel.Reset(false);
 			}
-		}
-		
-		//Death :skull:
-		if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current && settings["resetDeath"])
-		{
-			vars.Dbg("Death Reset");
-			vars.TimerModel.Reset(false);
 		}
 	}
 }
@@ -180,100 +186,124 @@ split
 	//Boss
 	if(settings["Boss"])
 	{
-		if(vars.watchers["StageID"].Current == 2 && vars.boss["Armor"].Current == vars.boss["Armor"].Old + 1 && settings["Armor"]) return true;
-		if(vars.watchers["StageID"].Current == 2 && vars.boss["Secret"].Current == vars.boss["Secret"].Old + 1 && settings["Secret"]) return true;
-		if(vars.watchers["StageID"].Current == 3 && vars.boss["Tania"].Current == vars.boss["Tania"].Old + 1 && settings["Tania"]) return true;
-		if(vars.watchers["StageID"].Current == 4 && vars.boss["Monica1"].Current == vars.boss["Monica1"].Old + 1 && settings["Monica1"]) return true;
-		if(vars.watchers["StageID"].Current == 4 && vars.boss["Monica2"].Current == vars.boss["Monica2"].Old + 1 && settings["Monica2"]) return true;
-		if(vars.watchers["StageID"].Current == 5 && vars.boss["Vanessa1"].Current == vars.boss["Vanessa1"].Old + 1 && settings["Vanessa1"]) return true;
-		if(vars.watchers["StageID"].Current == 6 && vars.boss["Vanessa2"].Current == vars.boss["Vanessa2"].Old + 1 && settings["Vanessa2"]) return true;
-		if(vars.watchers["StageID"].Current == 7 && vars.boss["Nonota"].Current == vars.boss["Nonota"].Old + 1 && settings["Nonota"]) return true;
+		if(vars.Boss[vars.watchers["bossDialogue"].Current] == 0)
+		{
+			if(vars.watchers["StageID"].Current == 2 && vars.boss["Armor"].Current == vars.boss["Armor"].Old + 1 && settings["Armor"])
+			{
+				vars.Boss[1] = 1;
+				return true;
+			}
+			if(vars.watchers["StageID"].Current == 2 && vars.boss["Secret"].Current == vars.boss["Secret"].Old + 1 && settings["Secret"])
+			{
+				vars.Boss[7] = 1;
+				return true;
+			}
+			if(vars.watchers["StageID"].Current == 3 && vars.boss["Tania"].Current == vars.boss["Tania"].Old + 1 && settings["Tania"])
+			{
+				vars.Boss[2] = 1;
+				return true;
+			}
+			if(vars.watchers["StageID"].Current == 5 && vars.boss["Vanessa1"].Current == vars.boss["Vanessa1"].Old + 1 && settings["Vanessa1"])
+			{
+				vars.Boss[4] = 1;
+				return true;
+			}
+			if(vars.watchers["StageID"].Current == 6 && vars.boss["Vanessa2"].Current == vars.boss["Vanessa2"].Old + 1 && settings["Vanessa2"])
+			{
+				vars.Boss[5] = 1;
+				return true;
+			}
+			if(vars.watchers["StageID"].Current == 7 && vars.boss["Nonota"].Current == vars.boss["Nonota"].Old + 1 && settings["Nonota"])
+			{
+				vars.Boss[6] = 1;
+				return true;
+			}
+		}
+		if((vars.watchers["bossDialogue"].Current == 3) && ((vars.Boss[3] == 0) || (vars.Boss[8] == 0)))
+		{
+			if(vars.boss["Monica1"].Current == vars.boss["Monica1"].Old + 1 && settings["Monica1"] && vars.Boss[3] == 0)
+			{
+				vars.Boss[3] = 1;
+				return true;
+			}
+			if(vars.boss["Monica2"].Current == vars.boss["Monica2"].Old + 1 && settings["Monica2"] && vars.Boss[8] == 0)
+			{
+				vars.Boss[8] = 1;
+				return true;
+			}
+		}
 	}
 
 	//Mini Boss
 	if(settings["Mini Boss"])
 	{
-		if(vars.watchers["StageID"].Current == 5 && vars.miniboss["Knight"].Current == vars.miniboss["Knight"].Old + 1 && settings["Knight"]) return true;
-		if(vars.watchers["StageID"].Current == 6 && vars.miniboss["Seal1"].Current == vars.miniboss["Seal1"].Old + 1 && settings["Seal1"]) return true;
-		if(vars.watchers["StageID"].Current == 6 && vars.miniboss["Seal2"].Current == vars.miniboss["Seal2"].Old + 1 && settings["Seal2"]) return true;
+		if(vars.watchers["StageID"].Current == 5 && vars.miniboss["Knight"].Current == vars.miniboss["Knight"].Old + 1 && settings["Knight"] && vars.mBoss[0] == 0)
+		{
+			vars.mBoss[0] = 1;
+			return true;
+		}
+		if(vars.watchers["StageID"].Current == 6 && vars.miniboss["Seal1"].Current == vars.miniboss["Seal1"].Old + 1 && settings["Seal1"] && vars.mBoss[1] == 0)
+		{
+			vars.mBoss[1] = 1;
+			return true;
+		}
+		if(vars.watchers["StageID"].Current == 6 && vars.miniboss["Seal2"].Current == vars.miniboss["Seal2"].Old + 1 && settings["Seal2"] && vars.mBoss[2] == 0)
+		{
+			vars.mBoss[2] = 1;
+			return true;
+		}
 	}
 
 	//Start Boss
 	if(settings["sBoss"])
 	{
-		//player dead + boss alive = undosplit
-		//player not dead + boss alive + loading = undosplit
-		//player not dead + boss dead = null
-		if(settings["sArmor"])
+		if(vars.sBoss[vars.watchers["bossDialogue"].Current] == 0)
 		{
-			if(vars.watchers["bossDialogue"].Current == 1)
+			if(vars.watchers["bossDialogue"].Current == 1 && vars.watchers["bossDialogue"].Changed && settings["sArmor"])
 			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Armor"].Current == 0)) vars.TimerModel.UndoSplit();
+				vars.sBoss[1] = 1;
+				return true;
+			}
+			if(vars.watchers["bossDialogue"].Current == 2 && vars.watchers["bossDialogue"].Changed && settings["sTania"])
+			{
+				vars.sBoss[2] = 1;
+				return true;
+			}
+			if(vars.watchers["bossDialogue"].Current == 4 && vars.watchers["bossDialogue"].Changed && settings["sSecret"])
+			{
+				vars.sBoss[4] = 1;
+				return true;
+			}
+			if(vars.watchers["bossDialogue"].Current == 5 && vars.watchers["bossDialogue"].Changed && settings["sSecret"])
+			{
+				vars.sBoss[5] = 1;
+				return true;
+			}
+			if(vars.watchers["bossDialogue"].Current == 6 && vars.watchers["bossDialogue"].Changed && settings["sSecret"])
+			{
+				vars.sBoss[6] = 1;
+				return true;
+			}
+			if(vars.watchers["bossDialogue"].Current == 7 && vars.watchers["bossDialogue"].Changed && settings["sSecret"])
+			{
+				vars.sBoss[7] = 1;
+				return true;
 			}
 		}
-		if(settings["sTania"])
+		if((vars.watchers["bossDialogue"].Current == 3) && ((vars.sBoss[3] == 0) || (vars.sBoss[8] == 0)))
 		{
-			if(vars.watchers["bossDialogue"].Current == 2)
+			if(vars.watchers["bossDialogue"].Changed)
 			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Tania"].Current == 0)) vars.TimerModel.UndoSplit();
-			}
-		}
-		if(settings["sMonica1"] && vars.watchers["monicabear"].Current == 0)
-		{
-			if(vars.watchers["bossDialogue"].Current == 3)
-			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Monica1"].Current == 0)) vars.TimerModel.UndoSplit();
-			}
-		}
-		if(settings["sMonica2"] && vars.watchers["monicabear"].Current == 1)
-		{
-			if(vars.watchers["bossDialogue"].Current == 3)
-			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Monica2"].Current == 0)) vars.TimerModel.UndoSplit();
-			}
-		}
-		if(settings["sVanessa1"])
-		{
-			if(vars.watchers["bossDialogue"].Current == 4)
-			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Vanessa1"].Current == 0)) vars.TimerModel.UndoSplit();
-			}
-		}
-		if(settings["sVanessa2"])
-		{
-			if(vars.watchers["bossDialogue"].Current == 5)
-			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Vanessa2"].Current == 0)) vars.TimerModel.UndoSplit();
-			}
-		}
-		if(settings["sNonota"])
-		{
-			if(vars.watchers["bossDialogue"].Current == 6)
-			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Nonota"].Current == 0)) vars.TimerModel.UndoSplit();
-			}
-		}
-		if(settings["sSecret"])
-		{
-			if(vars.watchers["bossDialogue"].Current == 7)
-			{
-				if(vars.watchers["bossDialogue"].Changed) return true;
-				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
-				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Secret"].Current == 0)) vars.TimerModel.UndoSplit();
+				if(settings["sMonica1"] && (vars.watchers["monicabear"].Current == 0) && vars.sBoss[3] == 0)
+				{
+					vars.sBoss[3] = 1;
+					return true;
+				}
+				if(settings["sMonica2"] && (vars.watchers["monicabear"].Current == 1) && vars.sBoss[8] == 0)
+				{
+					vars.sBoss[8] = 1;
+					return true;
+				}
 			}
 		}
 	}
@@ -312,6 +342,11 @@ reset
 onStart
 {
 	timer.IsGameTimePaused = true;
+	Array.Clear(vars.Boss, 0, vars.Boss.Length);
+	Array.Clear(vars.sBoss, 0, vars.sBoss.Length);
+	Array.Clear(vars.mBoss, 0, vars.mBoss.Length);
+	vars.Boss[0] = 1;
+	vars.sBoss[0] = 1;
 }
 
 exit
