@@ -10,9 +10,11 @@ startup
 {
 	//Add Settings
 	settings.Add("Split");
-	settings.Add("Boss", true, "Boss", "Split");
-	settings.Add("Mini Boss", false, "Mini Boss", "Split");
+	settings.Add("Boss", true, "Boss Kill Split", "Split");
+	settings.Add("Mini Boss", false, "Mini Boss Kill Split", "Split");
+	settings.Add("sBoss", false, "Start Boss Fight Split", "Split");
 	settings.Add("Abyss Challenges", false, "Abyss Challenges", "Split");
+	settings.Add("Cutscene", false, "Cutscene", "Split");
 	settings.Add("Other", false);
 
 	settings.Add("Armor", true, "Mysterious Armor", "Boss");
@@ -28,21 +30,35 @@ startup
 	settings.Add("Seal1", false, "Seal Phase 1", "Mini Boss");
 	settings.Add("Seal2", false, "Seal Pahse 2", "Mini Boss");
 
+	settings.Add("sArmor", false, "Mysterious Armor", "sBoss");
+	settings.Add("sSecret", false, "Enraged Armor", "sBoss");
+	settings.Add("sTania", false, "Tania", "sBoss");
+	settings.Add("sMonica1", false, "Monica Phase 1", "sBoss");
+	settings.Add("sMonica2", false, "Monica Phase 2", "sBoss");
+	settings.Add("sVanessa1", false, "Vanessa 1", "sBoss");
+	settings.Add("sVanessa2", false, "Vanessa 2", "sBoss");
+	settings.Add("sNonota", false, "Nonota", "sBoss");
+
 	settings.Add("chalL", false, "Abyss Challenges Left", "Abyss Challenges");
 	settings.Add("chalR", false, "Abyss Challenges Right", "Abyss Challenges");
 	settings.Add("chalC", false, "Abyss Challenges Center", "Abyss Challenges");
+
+	settings.Add("dark tunnel", false, "End Dark Tunnel", "Cutscene");
 
 	settings.Add("onSystemMenu", false, "Timer Pause in Pause Menu", "Other");
 	settings.Add("resetDeath", false, "Death Reset", "Other");
 
 	settings.SetToolTip("Boss","Split when the boss death.");
 	settings.SetToolTip("Mini Boss","Split when the mini boss death.");
+	settings.SetToolTip("sBoss","Split when start boss fight.\nPlayer Dead + Boss Alive = Undo Split\nPlayer Not Dead + Boss Alive + Loading = Undo Split\nPlayer Not Dead + Boss Dead = Null");
 	settings.SetToolTip("Abyss Challenges","Split when destory the crytal.");
 	settings.SetToolTip("onSystemMenu","Timer pause while pasue menu is open.");
 	settings.SetToolTip("resetDeath","Reset timer when nobeta death.");
 
 	//DebugOutput
 	vars.Dbg = (Action<dynamic>) ((text) => print("[LWN Auto Splitter] : " + text));
+
+	vars.TimerModel = new TimerModel { CurrentState = timer };
 }
 
 init
@@ -67,8 +83,12 @@ init
 			new MemoryWatcher<bool>(new DeepPointer(ptr, 0x0, 0x40, 0x30, 0x28, 0xA0)) { Name = "progressLabel" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0xE8)) { Name = "StageID" },
 			new MemoryWatcher<bool>(new DeepPointer(ptr, 0x78, 0xD0)) { Name = "onSystemMenu" },
-			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0x58)) { Name = "stageState" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0x58)) { Name = "stageState" }, //state == 0 (normal = 0, death = 1, cutscene = 2, pray = 3)
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0x88)) { Name = "bossDialogue" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x3F)) { Name = "monicabear" },
+			new MemoryWatcher<bool>(new DeepPointer(ptr, 0x78, 0xA0, 0x18, 0x20, 0x11)) { Name = "isDead" },
 			new StringWatcher(new DeepPointer(ptr, 0x90, 0x10, 0x14), 128) { Name = "sceneName" }
+			//new MemoryWatcher<byte>(new DeepPointer(ptr, 0x50, 0x28 0x10 0x70)) { Name = "playerState" }, //30,31 sit next to statue //didnt used
 		};
 		vars.boss = new MemoryWatcherList
 		{
@@ -93,6 +113,10 @@ init
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x6F)) { Name = "chalR" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x70)) { Name = "chalC" }
 		};
+		vars.cutscene = new MemoryWatcherList
+		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x4C)) { Name = "dark tunnel" }
+		};
 	}
 
 	//Test
@@ -108,12 +132,37 @@ init
 update
 {
 	//Separate for reduce CPU usage (I hope so)
-	if (game.ProcessName == "LittleWitchNobeta")
+	if(game.ProcessName == "LittleWitchNobeta")
 	{
 		vars.watchers.UpdateAll(game);
 		if(settings["Boss"]) vars.boss.UpdateAll(game);
 		if(settings["Mini Boss"]) vars.miniboss.UpdateAll(game);
+		if(settings["Cutscene"]) vars.cutscene.UpdateAll(game);
 		if(settings["Abyss Challenges"]) vars.chal.UpdateAll(game);
+	}
+
+	if(settings.ResetEnabled)
+	{
+		if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title"))
+		{
+			if(vars.boss["Nonota"].Current == 1 && vars.watchers["StageID"].Current >= 7)
+			{
+				vars.Dbg("Reset");
+				vars.TimerModel.Reset();
+			}
+			else
+			{
+				vars.Dbg("Reset");
+				vars.TimerModel.Reset(false);
+			}
+		}
+		
+		//Death :skull:
+		if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current && settings["resetDeath"])
+		{
+			vars.Dbg("Death Reset");
+			vars.TimerModel.Reset(false);
+		}
 	}
 }
 
@@ -149,6 +198,86 @@ split
 		if(vars.watchers["StageID"].Current == 6 && vars.miniboss["Seal2"].Current == vars.miniboss["Seal2"].Old + 1 && settings["Seal2"]) return true;
 	}
 
+	//Start Boss
+	if(settings["sBoss"])
+	{
+		//player dead + boss alive = undosplit
+		//player not dead + boss alive + loading = undosplit
+		//player not dead + boss dead = null
+		if(settings["sArmor"])
+		{
+			if(vars.watchers["bossDialogue"].Current == 1)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Armor"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+		if(settings["sTania"])
+		{
+			if(vars.watchers["bossDialogue"].Current == 2)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Tania"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+		if(settings["sMonica1"] && vars.watchers["monicabear"].Current == 0)
+		{
+			if(vars.watchers["bossDialogue"].Current == 3)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Monica1"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+		if(settings["sMonica2"] && vars.watchers["monicabear"].Current == 1)
+		{
+			if(vars.watchers["bossDialogue"].Current == 3)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Monica2"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+		if(settings["sVanessa1"])
+		{
+			if(vars.watchers["bossDialogue"].Current == 4)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Vanessa1"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+		if(settings["sVanessa2"])
+		{
+			if(vars.watchers["bossDialogue"].Current == 5)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Vanessa2"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+		if(settings["sNonota"])
+		{
+			if(vars.watchers["bossDialogue"].Current == 6)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Nonota"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+		if(settings["sSecret"])
+		{
+			if(vars.watchers["bossDialogue"].Current == 7)
+			{
+				if(vars.watchers["bossDialogue"].Changed) return true;
+				if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current) vars.TimerModel.UndoSplit();
+				if(!vars.watchers["isDead"].Current && !vars.watchers["progressLabel"].Current && vars.watchers["progressLabel"].Changed && (vars.boss["Secret"].Current == 0)) vars.TimerModel.UndoSplit();
+			}
+		}
+	}
+
 	//Abyss Challenges
 	if(settings["Abyss Challenges"])
 	{
@@ -158,6 +287,12 @@ split
 			if(vars.chal["chalR"].Current == vars.chal["chalR"].Old + 1 && settings["chalR"]) return true;
 			if(vars.chal["chalC"].Current == vars.chal["chalC"].Old + 1 && settings["chalC"]) return true;
 		}
+	}
+
+	//Cutscene dark tunnel
+	if(settings["Cutscene"])
+	{
+		if(vars.cutscene["dark tunnel"].Current == vars.cutscene["dark tunnel"].Old + 1 && settings["dark tunnel"]) return true;
 	}
 }
 
@@ -170,18 +305,7 @@ isLoading
 
 reset
 {
-	if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title"))
-	{
-		vars.Dbg("Reset");
-		return true;
-	}
-	
-	//Death :skull:
-	if(vars.watchers["stageState"].Changed && (vars.watchers["stageState"].Current == 1) && settings["resetDeath"])
-	{
-		vars.Dbg("Death Reset");
-		return true;
-	}
+	return false;
 }
 
 //fix IGT ahead 0.01-0.04 after start
