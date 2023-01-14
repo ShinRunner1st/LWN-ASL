@@ -15,6 +15,7 @@ startup
 	settings.Add("sBoss", false, "Start Boss Fight Split", "Split");
 	settings.Add("Abyss Challenges", false, "Abyss Challenges", "Split");
 	settings.Add("Cutscene", false, "Cutscene", "Split");
+	settings.Add("Magic", false, "Magic Level", "Split");
 	settings.Add("Other", true);
 
 	settings.Add("Armor", true, "Mysterious Armor", "Boss");
@@ -44,6 +45,13 @@ startup
 	settings.Add("chalC", false, "Abyss Challenges Center", "Abyss Challenges");
 
 	settings.Add("dark tunnel", false, "End of Dark tunnel", "Cutscene");
+
+	settings.Add("Arcane Lv.2", false, "Arcane Lv.2", "Magic");
+	settings.Add("Ice Lv.1", false, "Ice Lv.1", "Magic");
+	settings.Add("Fire Lv.1", false, "Fire Lv.1", "Magic");
+	settings.Add("Thunder Lv.1", false, "Thunder Lv.1", "Magic");
+	settings.Add("Absorption Lv.1", false, "Absorption Lv.1", "Magic");
+	settings.Add("Wind Lv.1", false, "Wind Lv.1", "Magic");
 
 	settings.Add("onSystemMenu", false, "Timer pause in pause menu", "Other");
 	settings.Add("splitEverytime", false, "Split every boss kill", "Other");
@@ -123,6 +131,15 @@ init
 		{
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x4C)) { Name = "dark tunnel" }
 		};
+		vars.magic = new MemoryWatcherList
+		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x3C)) { Name = "Arcane" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x40)) { Name = "Ice" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x44)) { Name = "Fire" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x48)) { Name = "Thunder" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x4C)) { Name = "Absorption" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x50)) { Name = "Wind" }
+		};
 	}
 
 	//Test
@@ -145,6 +162,7 @@ update
 		if(settings["Mini Boss"]) vars.miniboss.UpdateAll(game);
 		if(settings["Cutscene"]) vars.cutscene.UpdateAll(game);
 		if(settings["Abyss Challenges"]) vars.chal.UpdateAll(game);
+		if(settings["Magic"]) vars.magic.UpdateAll(game);
 	}
 
 	if(settings.ResetEnabled)
@@ -333,6 +351,17 @@ split
 	if(settings["Cutscene"])
 	{
 		if(vars.cutscene["dark tunnel"].Current == vars.cutscene["dark tunnel"].Old + 1 && settings["dark tunnel"]) return true;
+	}
+
+	//Magic level
+	if(settings["Magic"])
+	{
+		if(vars.magic["Arcane"].Current == 2 && vars.magic["Arcane"].Changed && settings["Arcane Lv.2"]) return true;
+		if(vars.magic["Ice"].Current == 1 && vars.magic["Ice"].Changed && settings["Ice Lv.1"]) return true;
+		if(vars.magic["Fire"].Current == 1 && vars.magic["Fire"].Changed && settings["Fire Lv.1"]) return true;
+		if(vars.magic["Thunder"].Current == 1 && vars.magic["Thunder"].Changed && settings["Thunder Lv.1"]) return true;
+		if(vars.magic["Absorption"].Current == 1 && vars.magic["Absorption"].Changed && settings["Absorption Lv.1"]) return true;
+		if(vars.magic["Wind"].Current == 1 && vars.magic["Wind"].Changed && settings["Wind Lv.1"]) return true;
 	}
 }
 
