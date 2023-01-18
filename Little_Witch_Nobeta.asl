@@ -46,6 +46,7 @@ startup
 	settings.Add("chalC", false, "Abyss Challenges Center", "Abyss Challenges");
 
 	settings.Add("saveCat", false, "Rescue Cat", "Cutscene");
+	settings.Add("hatLost", false, "Hat Lost", "Cutscene");
 	settings.Add("dark tunnel", false, "End of Dark tunnel", "Cutscene");
 
 	settings.Add("Arcane Lv.2", false, "Arcane Lv.2", "Magic");
@@ -138,6 +139,7 @@ init
 		vars.cutscene = new MemoryWatcherList
 		{
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x13)) { Name = "saveCat" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x42)) { Name = "hatLost" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x4C)) { Name = "dark tunnel" }
 		};
 		vars.magic = new MemoryWatcherList
@@ -368,6 +370,7 @@ split
 	if(settings["Cutscene"])
 	{
 		if(vars.cutscene["saveCat"].Current == vars.cutscene["saveCat"].Old + 1 && settings["saveCat"]) return true;
+		if(vars.cutscene["hatLost"].Current == vars.cutscene["hatLost"].Old + 1 && settings["hatLost"]) return true;
 		if(vars.cutscene["dark tunnel"].Current == vars.cutscene["dark tunnel"].Old + 1 && settings["dark tunnel"]) return true;
 	}
 
