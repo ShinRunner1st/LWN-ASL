@@ -16,7 +16,8 @@ startup
 	settings.Add("Abyss Challenges", false, "Abyss Challenges", "Split");
 	settings.Add("Cutscene", false, "Cutscene", "Split");
 	settings.Add("Magic", false, "Magic Level", "Split");
-	settings.Add("Other", true);
+	settings.Add("Reset", true);
+	settings.Add("Other", false);
 
 	settings.Add("Armor", true, "Mysterious Armor", "Boss");
 	settings.Add("Secret", false, "Enraged Armor", "Boss");
@@ -53,10 +54,13 @@ startup
 	settings.Add("Absorption Lv.1", false, "Absorption Lv.1", "Magic");
 	settings.Add("Wind Lv.1", false, "Wind Lv.1", "Magic");
 
+	settings.Add("resetSave", true, "Save split records when reset", "Reset");
+	settings.Add("resetDeath", false, "Death reset", "Reset");
+	settings.Add("resetTitle", true, "Title reset","Reset");
+	settings.Add("resetEnd", true, "NewGame+ Click reset", "Reset");
+
 	settings.Add("onSystemMenu", false, "Timer pause in pause menu", "Other");
 	settings.Add("splitEverytime", false, "Split every boss kill", "Other");
-	settings.Add("resetDeath", false, "Death reset", "Other");
-	settings.Add("resetSave", true, "Save split records when reset", "Other");
 	
 	settings.SetToolTip("Boss","Split when the boss is dead.");
 	settings.SetToolTip("Mini Boss","Split when the mini boss is dead.");
@@ -67,6 +71,8 @@ startup
 	settings.SetToolTip("splitEverytime","Enable : Split every time when you kill the boss.\nDisable : Split on first time you kill the boss.");
 	settings.SetToolTip("resetDeath","Reset timer when nobeta is dead.\nAddtional option for the reset option.");
 	settings.SetToolTip("resetSave","Enable : Save split records when reset.\nDisable : Not save any record when reset.");
+	settings.SetToolTip("resetTitle","Reset when click Return To Title Screen Button");
+	settings.SetToolTip("resetEnd","Reset when click OK Button in unlock NG+ screen");
 
 	//DebugOutput
 	vars.Dbg = (Action<dynamic>) ((text) => print("[LWN Auto Splitter] : " + text));
@@ -167,17 +173,25 @@ update
 
 	if(settings.ResetEnabled)
 	{
-		if(timer.CurrentPhase == TimerPhase.Ended)
-		{
-			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title"))
-			{
-				vars.Dbg("Reset Save");
-				vars.TimerModel.Reset();
-			}
-		}
 		if(timer.CurrentPhase != TimerPhase.NotRunning)
 		{
-			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title"))
+			//NG+ Click
+			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title") && (vars.watchers["sceneName"].Old == "Staff"))
+			{
+				if(settings["resetSave"])
+				{
+					vars.Dbg("NG+ Reset Save");
+					vars.TimerModel.Reset();
+				}
+				else
+				{
+					vars.Dbg("NG+ Reset");
+					vars.TimerModel.Reset(false);
+				}
+			}
+
+			//Anywhere that have title button except NG+ button
+			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title") && (vars.watchers["sceneName"].Old != "Staff"))
 			{
 				if(settings["resetSave"])
 				{
@@ -191,7 +205,7 @@ update
 				}
 			}
 			
-			//Death :skull:
+			//Nobeta Dead :skull:
 			if(vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current && settings["resetDeath"])
 			{
 				if(settings["resetSave"])
