@@ -45,6 +45,7 @@ startup
 	settings.Add("chalR", false, "Abyss Challenges Right", "Abyss Challenges");
 	settings.Add("chalC", false, "Abyss Challenges Center", "Abyss Challenges");
 
+	settings.Add("saveCat", false, "Rescue Cat", "Cutscene");
 	settings.Add("dark tunnel", false, "End of Dark tunnel", "Cutscene");
 
 	settings.Add("Arcane Lv.2", false, "Arcane Lv.2", "Magic");
@@ -67,6 +68,7 @@ startup
 	settings.SetToolTip("sBoss","Split when start boss fight.");
 	settings.SetToolTip("Abyss Challenges","Split when destory the crystal.");
 	settings.SetToolTip("dark tunnel","Split when skip the last cutscene of dark tunnel section.");
+	settings.SetToolTip("saveCat","Split when cutscene happend.");
 	settings.SetToolTip("onSystemMenu","Timer pause while pasue menu is open.\n\nRuns using this feature will get the time added back on before validation.");
 	settings.SetToolTip("splitEverytime","Enable : Split every time when you kill the boss.\nDisable : Split on first time you kill the boss.");
 	settings.SetToolTip("resetDeath","Reset timer when nobeta is dead.\nAddtional option for the reset option.");
@@ -135,6 +137,7 @@ init
 		};
 		vars.cutscene = new MemoryWatcherList
 		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x13)) { Name = "saveCat" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x4C)) { Name = "dark tunnel" }
 		};
 		vars.magic = new MemoryWatcherList
@@ -364,6 +367,7 @@ split
 	//Cutscene dark tunnel
 	if(settings["Cutscene"])
 	{
+		if(vars.cutscene["saveCat"].Current == vars.cutscene["saveCat"].Old + 1 && settings["saveCat"]) return true;
 		if(vars.cutscene["dark tunnel"].Current == vars.cutscene["dark tunnel"].Old + 1 && settings["dark tunnel"]) return true;
 	}
 
