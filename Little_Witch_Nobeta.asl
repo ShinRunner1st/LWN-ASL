@@ -193,7 +193,7 @@ update
 		if(timer.CurrentPhase != TimerPhase.NotRunning)
 		{
 			//NG+ Click
-			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title") && (vars.watchers["sceneName"].Old == "Staff"))
+			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title") && (vars.watchers["sceneName"].Old == "Staff") && settings["resetEnd"])
 			{
 				if(settings["resetSave"])
 				{
@@ -208,7 +208,7 @@ update
 			}
 
 			//Anywhere that have title button except NG+ button
-			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title") && (vars.watchers["sceneName"].Old != "Staff"))
+			if(vars.watchers["sceneName"].Changed && (vars.watchers["sceneName"].Current == "Title") && (vars.watchers["sceneName"].Old != "Staff") && settings["resetTitle"])
 			{
 				if(settings["resetSave"])
 				{
