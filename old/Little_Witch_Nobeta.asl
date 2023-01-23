@@ -16,8 +16,6 @@ startup
 	settings.Add("Abyss Challenges", false, "Abyss Challenges", "Split");
 	settings.Add("Cutscene", false, "Cutscene", "Split");
 	settings.Add("Magic", false, "Magic Level", "Split");
-	settings.Add("Items", false, "Items", "Split");
-	settings.Add("Chest", false, "Treasure Chest", "Split");
 	settings.Add("Reset", true);
 	settings.Add("Other", false);
 
@@ -78,8 +76,6 @@ startup
 	settings.SetToolTip("resetSave","Enable : Save split records when reset.\nDisable : Not save any record when reset.");
 	settings.SetToolTip("resetTitle","Reset when click Return To Title Screen Button");
 	settings.SetToolTip("resetEnd","Reset when click OK Button in unlock NG+ screen");
-	settings.SetToolTip("Items","Split every time you pick item");
-	settings.SetToolTip("Chest","Split every time when you OPEN chest");
 
 	//DebugOutput
 	vars.Dbg = (Action<dynamic>) ((text) => print("[LWN Auto Splitter] : " + text));
@@ -114,7 +110,6 @@ init
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x78, 0x88)) { Name = "bossDialogue" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x3F)) { Name = "monicabear" },
 			new MemoryWatcher<bool>(new DeepPointer(ptr, 0x78, 0xA0, 0x18, 0x20, 0x11)) { Name = "isDead" },
-			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x28, 0x20)) { Name = "Chest" },
 			new StringWatcher(new DeepPointer(ptr, 0x90, 0x10, 0x14), 128) { Name = "sceneName" }
 			//new MemoryWatcher<byte>(new DeepPointer(ptr, 0x50, 0x28 0x10 0x70)) { Name = "playerState" }, //30,31 sit next to statue //didnt used
 		};
@@ -156,12 +151,6 @@ init
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x4C)) { Name = "Absorption" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x20, 0x50)) { Name = "Wind" }
 		};
-		vars.items = new MemoryWatcherList();
-		for (int i = 0; i < 103; i++)
-		{
-			//var item = new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x28, 0x38, 0x20 + i)) { Name = "Item" + (i+1) };
-			vars.items.Add(new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x28, 0x38, 0x20 + i)) { Name = "Item" + (i+1) });
-		}
 	}
 
 	//Test
@@ -185,7 +174,6 @@ update
 		if(settings["Cutscene"]) vars.cutscene.UpdateAll(game);
 		if(settings["Abyss Challenges"]) vars.chal.UpdateAll(game);
 		if(settings["Magic"]) vars.magic.UpdateAll(game);
-		if(settings["Items"]) vars.items.UpdateAll(game);
 	}
 
 	if(settings.ResetEnabled)
@@ -395,21 +383,6 @@ split
 		if(vars.magic["Thunder"].Current == 1 && vars.magic["Thunder"].Changed && settings["Thunder Lv.1"]) return true;
 		if(vars.magic["Absorption"].Current == 1 && vars.magic["Absorption"].Changed && settings["Absorption Lv.1"]) return true;
 		if(vars.magic["Wind"].Current == 1 && vars.magic["Wind"].Changed && settings["Wind Lv.1"]) return true;
-	}
-
-	//Items
-	if(settings["Items"])
-	{
-		foreach (var item in vars.items)
-		{
-			if(item.Changed && item.Current == 1) return true;
-		}
-	}
-	
-	//Chest
-	if(settings["Chest"])
-	{
-		if(vars.watchers["Chest"].Current == vars.watchers["Chest"].Old + 1) return true;
 	}
 }
 
