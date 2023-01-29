@@ -13,8 +13,9 @@ startup
 	settings.Add("Boss", true, "Boss Kill Split", "Split");
 	settings.Add("Mini Boss", false, "Mini Boss Kill Split", "Split");
 	settings.Add("sBoss", false, "Start Boss Fight Split", "Split");
+	settings.Add("sMini Boss", false, "Start Mini Boss Fight Split", "Split");
 	settings.Add("Abyss Challenges", false, "Abyss Challenges", "Split");
-	settings.Add("Cutscene", false, "Cutscene", "Split");
+	settings.Add("Cutscene", false, "Cutscene/Trigger", "Split");
 	settings.Add("Magic", false, "Magic Level", "Split");
 	settings.Add("Items", false, "Items", "Split");
 	settings.Add("Chest", false, "Treasure Chest", "Split");
@@ -43,13 +44,25 @@ startup
 	settings.Add("sVanessa2", false, "Vanessa 2", "sBoss");
 	settings.Add("sNonota", false, "Nonota", "sBoss");
 
+	settings.Add("sSeal1", false, "Seal Phase 1", "sMini Boss");
+	settings.Add("sSeal2", false, "Seal Pahse 2", "sMini Boss");
+
 	settings.Add("chalL", false, "Abyss Challenges Left", "Abyss Challenges");
 	settings.Add("chalR", false, "Abyss Challenges Right", "Abyss Challenges");
 	settings.Add("chalC", false, "Abyss Challenges Center", "Abyss Challenges");
 
+	settings.Add("crystal 1", false, "Crystal Trial", "Cutscene");
 	settings.Add("saveCat", false, "Rescue Cat", "Cutscene");
+	settings.Add("IceFire", false, "Ice deflect fire (Destory Crystal)", "Cutscene");
+	settings.Add("destory wood", false, "Wood Plank Trap (Destory Wood Plank)", "Cutscene");
+	settings.Add("destory crystal with fire", false, "Fire Trial (Destory Crystal)", "Cutscene");
 	settings.Add("hatLost", false, "Hat Lost", "Cutscene");
+	settings.Add("hatGet", false, "Hat Get", "Cutscene");
+	settings.Add("destory orb", false, "Orb Before Get hat (Destory Orb)", "Cutscene");
+	settings.Add("destory 3 crytals", false, "Thunder Trial (Destory 3 Crystals)", "Cutscene");
 	settings.Add("dark tunnel", false, "End of Dark tunnel", "Cutscene");
+	settings.Add("destory crystal open teleport", false, "Open Teleport Gate (Destory Crystals)", "Cutscene");
+	settings.Add("open door abyss", false, "Open Door Gate [Abyss]", "Cutscene");
 
 	settings.Add("Arcane Lv.2", false, "Arcane Lv.2", "Magic");
 	settings.Add("Ice Lv.1", false, "Ice Lv.1", "Magic");
@@ -90,7 +103,7 @@ startup
 init
 {
 	//Declared
-	vars.Boss = new int[3,9];
+	vars.Boss = new int[4,9];
 	IntPtr ptr = IntPtr.Zero;
 	var module = game.ModulesWow64Safe().First(m => m.ModuleName == "GameAssembly.dll");
 	var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
@@ -115,6 +128,8 @@ init
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x3F)) { Name = "monicabear" },
 			new MemoryWatcher<bool>(new DeepPointer(ptr, 0x78, 0xA0, 0x18, 0x20, 0x11)) { Name = "isDead" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x28, 0x20)) { Name = "Chest" },
+			new MemoryWatcher<int>(new DeepPointer(ptr, 0x0, 0x18, 0x18, 0x30)) { Name = "InGameTime" },
+			new StringWatcher(new DeepPointer(ptr, 0x78, 0xC0, 0x40, 0x10, 0x14), 128) { Name = "scriptName" },
 			new StringWatcher(new DeepPointer(ptr, 0x90, 0x10, 0x14), 128) { Name = "sceneName" }
 			//new MemoryWatcher<byte>(new DeepPointer(ptr, 0x50, 0x28 0x10 0x70)) { Name = "playerState" }, //30,31 sit next to statue //didnt used
 		};
@@ -143,9 +158,18 @@ init
 		};
 		vars.cutscene = new MemoryWatcherList
 		{
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x11)) { Name = "crystal 1" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x13)) { Name = "saveCat" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x24)) { Name = "IceFire" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x38)) { Name = "destory wood" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x3C)) { Name = "destory crystal with fire" },
 			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x42)) { Name = "hatLost" },
-			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x4C)) { Name = "dark tunnel" }
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x43)) { Name = "hatGet" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x51)) { Name = "destory orb" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x48)) { Name = "destory 3 crytals" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x4C)) { Name = "dark tunnel" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x60)) { Name = "destory crystal open teleport" },
+			new MemoryWatcher<byte>(new DeepPointer(ptr, 0x0, 0x18, 0x30, 0x64)) { Name = "open door abyss" }
 		};
 		vars.magic = new MemoryWatcherList
 		{
@@ -186,6 +210,7 @@ update
 		if(settings["Abyss Challenges"]) vars.chal.UpdateAll(game);
 		if(settings["Magic"]) vars.magic.UpdateAll(game);
 		if(settings["Items"]) vars.items.UpdateAll(game);
+		vars.InGameTime = TimeSpan.FromSeconds(vars.watchers["InGameTime"].Current).ToString(@"hh\:mm\:ss");
 	}
 
 	if(settings.ResetEnabled)
@@ -367,6 +392,21 @@ split
 		}
 	}
 
+	//Start Mini Boss
+	if(settings["sMini Boss"])
+	{
+		if(vars.watchers["scriptName"].Current == "Act06_Room05" && vars.watchers["scriptName"].Changed && settings["sSeal1"] && vars.Boss[3,1] == 0)
+		{
+			vars.Boss[3,1] = 1;
+			return true;
+		}
+		if(vars.watchers["scriptName"].Current == "Act06_Room06" && vars.watchers["scriptName"].Changed && settings["sSeal2"] && vars.Boss[3,2] == 0)
+		{
+			vars.Boss[3,2] = 1;
+			return true;
+		}
+	}
+
 	//Abyss Challenges
 	if(settings["Abyss Challenges"])
 	{
@@ -381,9 +421,18 @@ split
 	//Cutscene dark tunnel
 	if(settings["Cutscene"])
 	{
+		if(vars.cutscene["crystal 1"].Current == vars.cutscene["crystal 1"].Old + 1 && settings["crystal 1"]) return true;
 		if(vars.cutscene["saveCat"].Current == vars.cutscene["saveCat"].Old + 1 && settings["saveCat"]) return true;
+		if(vars.cutscene["IceFire"].Current == vars.cutscene["IceFire"].Old + 1 && settings["IceFire"]) return true;
+		if(vars.cutscene["destory wood"].Current == vars.cutscene["destory wood"].Old + 1 && settings["destory wood"]) return true;
+		if(vars.cutscene["destory crystal with fire"].Current == vars.cutscene["destory crystal with fire"].Old + 1 && settings["destory crystal with fire"]) return true;
 		if(vars.cutscene["hatLost"].Current == vars.cutscene["hatLost"].Old + 1 && settings["hatLost"]) return true;
+		if(vars.cutscene["hatGet"].Current == vars.cutscene["hatGet"].Old + 1 && settings["hatGet"]) return true;
+		if(vars.cutscene["destory orb"].Current == vars.cutscene["destory orb"].Old + 1 && settings["destory orb"]) return true;
+		if(vars.cutscene["destory 3 crytals"].Current == vars.cutscene["destory 3 crytals"].Old + 1 && settings["destory 3 crytals"]) return true;
 		if(vars.cutscene["dark tunnel"].Current == vars.cutscene["dark tunnel"].Old + 1 && settings["dark tunnel"]) return true;
+		if(vars.cutscene["destory crystal open teleport"].Current == vars.cutscene["destory crystal open teleport"].Old + 1 && settings["destory crystal open teleport"]) return true;
+		if(vars.cutscene["open door abyss"].Current == vars.cutscene["open door abyss"].Old + 1 && settings["open door abyss"]) return true;
 	}
 
 	//Magic level
