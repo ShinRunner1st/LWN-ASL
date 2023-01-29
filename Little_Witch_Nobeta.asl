@@ -395,12 +395,12 @@ split
 	//Start Mini Boss
 	if(settings["sMini Boss"])
 	{
-		if(vars.watchers["scriptName"].Current == "Act06_Room05" && vars.watchers["scriptName"].Changed && settings["sSeal1"] && vars.Boss[3,1] == 0)
+		if(vars.watchers["scriptName"].Changed && vars.watchers["scriptName"].Current == "Act06_Room05" && settings["sSeal1"] && vars.Boss[3,1] == 0)
 		{
 			vars.Boss[3,1] = 1;
 			return true;
 		}
-		if(vars.watchers["scriptName"].Current == "Act06_Room06" && vars.watchers["scriptName"].Changed && settings["sSeal2"] && vars.Boss[3,2] == 0)
+		if(vars.watchers["scriptName"].Changed && vars.watchers["scriptName"].Current == "Act06_Room06" && settings["sSeal2"] && vars.Boss[3,2] == 0)
 		{
 			vars.Boss[3,2] = 1;
 			return true;
@@ -477,6 +477,8 @@ reset
 //fix IGT ahead 0.01-0.04 after start
 onStart
 {
+	vars.watchers["scriptName"].Current = "0";
+	vars.watchers["scriptName"].Old = "0";
 	timer.IsGameTimePaused = true;
 	Array.Clear(vars.Boss, 0, vars.Boss.Length);
 }
