@@ -58,11 +58,11 @@ startup
 	settings.Add("destory crystal with fire", false, "Fire Trial (Destory Crystal)", "Cutscene");
 	settings.Add("hatLost", false, "Hat Lost", "Cutscene");
 	settings.Add("hatGet", false, "Hat Get", "Cutscene");
-	settings.Add("destory orb", false, "Orb Before Get hat (Destory Orb)", "Cutscene");
+	settings.Add("destory orb", false, "Orb After Get hat (Destory Orb)", "Cutscene");
 	settings.Add("destory 3 crytals", false, "Thunder Trial (Destory 3 Crystals)", "Cutscene");
 	settings.Add("dark tunnel", false, "End of Dark tunnel", "Cutscene");
-	settings.Add("destory crystal open teleport", false, "Open Teleport Gate (Destory Crystals)", "Cutscene");
-	settings.Add("open door abyss", false, "Open Door Gate [Abyss]", "Cutscene");
+	settings.Add("destory crystal open teleport", false, "Castle 4 Barrier Stone (Destory Crystals)", "Cutscene");
+	settings.Add("open door abyss", false, "Open Door Gate [Abyss - Room 2]", "Cutscene");
 
 	settings.Add("Arcane Lv.2", false, "Arcane Lv.2", "Magic");
 	settings.Add("Ice Lv.1", false, "Ice Lv.1", "Magic");
