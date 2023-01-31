@@ -51,17 +51,17 @@ startup
 	settings.Add("chalR", false, "Abyss Challenges Right", "Abyss Challenges");
 	settings.Add("chalC", false, "Abyss Challenges Center", "Abyss Challenges");
 
-	settings.Add("crystal 1", false, "Crystal Trial", "Cutscene");
+	settings.Add("crystal 1", false, "Barrier Stone Trial", "Cutscene");
 	settings.Add("saveCat", false, "Rescue Cat", "Cutscene");
-	settings.Add("IceFire", false, "Ice deflect fire (Destory Crystal)", "Cutscene");
+	settings.Add("IceFire", false, "Ice deflect fire (Destory Barrier Stone)", "Cutscene");
 	settings.Add("destory wood", false, "Wood Plank Trap (Destory Wood Plank)", "Cutscene");
-	settings.Add("destory crystal with fire", false, "Fire Trial (Destory Crystal)", "Cutscene");
+	settings.Add("destory crystal with fire", false, "Fire Trial (Destory Barrier Stone)", "Cutscene");
 	settings.Add("hatLost", false, "Hat Lost", "Cutscene");
 	settings.Add("hatGet", false, "Hat Get", "Cutscene");
 	settings.Add("destory orb", false, "Orb After Get hat (Destory Orb)", "Cutscene");
-	settings.Add("destory 3 crytals", false, "Thunder Trial (Destory 3 Crystals)", "Cutscene");
+	settings.Add("destory 3 crytals", false, "Thunder Trial (Destory 3 Barrier Stone)", "Cutscene");
 	settings.Add("dark tunnel", false, "End of Dark tunnel", "Cutscene");
-	settings.Add("destory crystal open teleport", false, "Castle 4 Barrier Stone (Destory Crystals)", "Cutscene");
+	settings.Add("destory crystal open teleport", false, "Castle 4 Barrier Stone (Destory Barrier Stone)", "Cutscene");
 	settings.Add("open door abyss", false, "Open Door Gate [Abyss - Room 2]", "Cutscene");
 
 	settings.Add("Arcane Lv.2", false, "Arcane Lv.2", "Magic");
@@ -82,7 +82,7 @@ startup
 	settings.SetToolTip("Boss","Split when the boss is dead.");
 	settings.SetToolTip("Mini Boss","Split when the mini boss is dead.");
 	settings.SetToolTip("sBoss","Split when start boss fight.");
-	settings.SetToolTip("Abyss Challenges","Split when destory the crystal.");
+	settings.SetToolTip("Abyss Challenges","Split when destory the brrier stone.");
 	settings.SetToolTip("dark tunnel","Split when skip the last cutscene of dark tunnel section.");
 	settings.SetToolTip("saveCat","Split when cutscene happend.");
 	settings.SetToolTip("onSystemMenu","Timer pause while pasue menu is open.\n\nRuns using this feature will get the time added back on before validation.");
