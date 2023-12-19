@@ -123,6 +123,7 @@ startup
 init
 {
 	version = current.Ver;
+	vars.newVersion = current.Ver[2];
 	//Declared
 	vars.Boss = new int[4,9];
 	IntPtr ptr = IntPtr.Zero;
@@ -139,7 +140,7 @@ init
 	//ReadMem
 	if(ptr != IntPtr.Zero)
 	{
-		if(version == "1.1.0")
+		if(vars.newVersion > 0)
 		{
 			vars.watchers = new MemoryWatcherList
 			{
@@ -281,7 +282,7 @@ init
 	//Address (Show on Game Version)
 	//version = ptr.ToString("X");
 	
-	if(version == "1.1.0")
+	if(vars.newVersion > 0)
 	{
 		vars.trialtower.UpdateAll(game);
 		vars.trialtower["ArmorTTTimer"].Old = 69;
@@ -310,7 +311,7 @@ update
 		if(settings["Abyss Challenges"]) vars.chal.UpdateAll(game);
 		if(settings["Magic"]) vars.magic.UpdateAll(game);
 		if(settings["Items"]) vars.items.UpdateAll(game);
-		if(version == "1.1.0")
+		if(vars.newVersion > 0)
 		{
 			if(settings["Trial Tower"]) vars.trialtower.UpdateAll(game);
 			if(settings["Timer"] && vars.watchers["isDead"].Changed && vars.watchers["isDead"].Current == 0) vars.IsDeadTT = 1;
@@ -377,7 +378,7 @@ start
 		vars.Dbg("Start");
 		return true;
 	}
-	if(version == "1.1.0")
+	if(vars.newVersion > 0)
 	{
 		if(settings["NewGameTT"] && vars.watchers["sceneName"].Changed && vars.watchers["sceneName"].Current == "BossRush01")
 		{
@@ -415,7 +416,7 @@ start
 split
 {
 	//Trial Tower
-	if(version == "1.1.0")
+	if(vars.newVersion > 0)
 	{
 		if(settings["Timer"])
 		{
@@ -675,7 +676,7 @@ split
 
 gameTime
 {
-	if(version == "1.1.0")
+	if(vars.newVersion > 0)
 	{
 		if(settings["Boss IGT Sync"] && vars.trialtower["testmode"].Current == 1)
 		{
@@ -701,7 +702,7 @@ onStart
 {
 	vars.watchers["scriptName"].Current = "0";
 	vars.watchers["scriptName"].Old = "0";
-	if(version == "1.1.0")
+	if(vars.newVersion > 0)
 	{
 		vars.IsDeadTT = 0;
 		if(settings["Trial Tower"] && vars.trialtower["testmode"].Current == 0) timer.IsGameTimePaused = true;
