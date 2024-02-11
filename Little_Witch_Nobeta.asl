@@ -133,6 +133,7 @@ init
 	IntPtr ptr = IntPtr.Zero;
 	vars.IsDeadTT = 0;
 	vars.itemCount = 0;
+	vars.allItemCheck = false;
 	var module = game.ModulesWow64Safe().First(m => m.ModuleName == "GameAssembly.dll");
 	var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
 	var target = new SigScanTarget(3, "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? C6 05 ?? ?? ?? ?? 01 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 D2 48 8B C8 48 8B D8 E8 ?? ?? ?? ?? 48 85 FF 0F 84 ?? ?? ?? ?? 48 85 DB 74 ?? 8B 4F ??")
@@ -666,15 +667,20 @@ split
 	//Items
 	if(settings["Items"])
 	{
+		vars.itemCount = 0;
 		foreach (var item in vars.items)
 		{
-			if(item.Changed && item.Current == 1)
+			if(item.Current == 1)
 			{
 				vars.itemCount++;
-				if(settings["anyItem"]) return true;
+				if(item.Changed && settings["anyItem"]) return true;
 			}
 		}
-		if(settings["lastItem"] && vars.itemCount == 103) return true;
+		if(settings["lastItem"] && !vars.allItemCheck && vars.itemCount == 103)
+		{
+			vars.allItemCheck = true;
+			return true;
+		}
 	}
 	
 	//Chest
@@ -713,6 +719,7 @@ onStart
 	vars.watchers["scriptName"].Current = "0";
 	vars.watchers["scriptName"].Old = "0";
 	vars.itemCount = 0;
+	vars.allItemCheck = false;
 	if(vars.newVersion > '0')
 	{
 		vars.IsDeadTT = 0;
