@@ -72,6 +72,9 @@ startup
 	settings.Add("Absorption Lv.1", false, "Absorption Lv.1", "Magic");
 	settings.Add("Wind Lv.1", false, "Wind Lv.1", "Magic");
 
+	settings.Add("anyItem", false, "Any Item", "Items");
+	settings.Add("lastItem", false, "Last Item", "Items");
+
 	settings.Add("resetSave", true, "Save split records when reset", "Reset");
 	settings.Add("resetDeath", false, "Death reset", "Reset");
 	settings.Add("resetTitle", true, "Title reset","Reset");
@@ -92,7 +95,8 @@ startup
 	settings.SetToolTip("resetSave","Enable : Save split records when reset.\nDisable : Not save any record when reset.");
 	settings.SetToolTip("resetTitle","Reset when click Return To Title Screen Button");
 	settings.SetToolTip("resetEnd","Reset when click OK Button in unlock NG+ screen");
-	settings.SetToolTip("Items","Split every time you pick item");
+	settings.SetToolTip("anyItem","Split every time you pick item");
+	settings.SetToolTip("lastItem","Split when you pick last item (103)");
 	settings.SetToolTip("Chest","Split every time when you OPEN chest");
 	
 	settings.Add("Trial Tower", false, "Trial Tower [1.1.0+]");
@@ -128,6 +132,7 @@ init
 	vars.Boss = new int[4,9];
 	IntPtr ptr = IntPtr.Zero;
 	vars.IsDeadTT = 0;
+	vars.itemCount = 0;
 	var module = game.ModulesWow64Safe().First(m => m.ModuleName == "GameAssembly.dll");
 	var scanner = new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
 	var target = new SigScanTarget(3, "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? C6 05 ?? ?? ?? ?? 01 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 D2 48 8B C8 48 8B D8 E8 ?? ?? ?? ?? 48 85 FF 0F 84 ?? ?? ?? ?? 48 85 DB 74 ?? 8B 4F ??")
@@ -663,8 +668,13 @@ split
 	{
 		foreach (var item in vars.items)
 		{
-			if(item.Changed && item.Current == 1) return true;
+			if(item.Changed && item.Current == 1)
+			{
+				vars.itemCount++;
+				if(settings["anyItem"]) return true;
+			}
 		}
+		if(settings["lastItem"] && vars.itemCount == 103) return true;
 	}
 	
 	//Chest
@@ -702,6 +712,7 @@ onStart
 {
 	vars.watchers["scriptName"].Current = "0";
 	vars.watchers["scriptName"].Old = "0";
+	vars.itemCount = 0;
 	if(vars.newVersion > '0')
 	{
 		vars.IsDeadTT = 0;
